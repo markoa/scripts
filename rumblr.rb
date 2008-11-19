@@ -7,6 +7,22 @@ module Rumblr
 
   GENERATOR = "rumblr"
 
+  class ResponseError < StandardError
+    attr_reader :response
+    def initialize(response)
+      @response = response
+    end
+  end
+
+  class AuthError < StandardError; end
+
+  class BadRequestError < StandardError
+    attr_reader :message
+    def initialize(message)
+      @message = message
+    end
+  end
+
   class Writer
     attr_accessor :email, :password
       
@@ -29,16 +45,12 @@ module Rumblr
         case res.code
         when '201'
           puts "Created post #{res.body.chomp}"
-          #return res.body.chomp
         when '403'
-          puts "Authentication error (#{@email}, #{@password})"
-          #raise AuthError.new
+          raise AuthError.new
         when '400'
-          puts "Bad request: #{res.body}"
-          #raise BadRequestError.new(res.body)
+          raise BadRequestError.new(res.body)
         else
-          puts "Response error #{res}"
-          #raise ResponseError.new(res)
+          raise ResponseError.new(res)
         end
       end
     end
@@ -103,10 +115,18 @@ rescue Exception
   creds.close
 end
 
-if ARGV.empty? or ARGV.first == "help"
-  print_help
-elsif ARGV.first == "regular"
-  post_regular(email, pwd)
-elsif ARGV.first == "quote"
-  post_quote(email, pwd)
+begin
+  if ARGV.empty? or ARGV.first == "help"
+    print_help
+  elsif ARGV.first == "regular"
+    post_regular(email, pwd)
+  elsif ARGV.first == "quote"
+    post_quote(email, pwd)
+  end
+rescue Rumblr::ResponseError => re
+  puts "Response error: #{re.message}"
+rescue Rumblr::AuthError
+  puts "Authentication error: your email address or password were incorrect."
+rescue Rumblr::BadRequestError => bre
+  puts "Error(s) occurred while trying to save your post:\n#{bre.message}"
 end
