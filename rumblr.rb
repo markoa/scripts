@@ -76,7 +76,7 @@ module Rumblr
   class Client
     def self.print_help
       puts "\nRumblr - command line client for posting on your Tumblr blog\n\n"
-      puts "Usage: rumblr [regular|quote]\n\n"
+      puts "Usage: rumblr [regular|quote|link]\n\n"
     end
 
     def self.post_regular(email, pwd)
